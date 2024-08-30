@@ -182,14 +182,16 @@ app.post("/product/save", async (req, res) => {
         const result = await pool.query(query, [nombre, descripcion, precio, categoria_id, descuento, es_nuevo, profundidad, ancho, alto, habilitado, link_wallapop]);
         var idNewProduct = result.rows[0].id;
         const queryImagenes = "INSERT INTO imagenes (producto_id, url) VALUES($1,$2)";
-        imageUrls.map(async m => {
+        const b = await imageUrls.map(async m => {
             const result2 = await pool.query(queryImagenes, [idNewProduct, m]);
         })
         const queryColores = "INSERT INTO productos_colores (producto_id, color_id) VALUES($1,$2)";
-        selectedColors.map(async m => {
+        const a = await selectedColors.map(async m => {
             const result3 = await pool.query(queryColores, [idNewProduct, m]);
         })
-
+        if (result.rows.length > 0) {
+            res.send({ code: 201, result });
+        }
     } catch (error) {
         console.error(error);
         res.status(500).send('failed');
@@ -220,7 +222,7 @@ app.delete("/products/:id", async (req, res) => {
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Producto no encontrado' });
         }
-        
+
         res.status(200).json(`Se ha eliminado correctamente el producto: ${id}`);
     } catch (error) {
         console.error(error);
@@ -261,7 +263,7 @@ app.delete("/categories/:id", async (req, res) => {
             if (error) {
                 throw error
             }
-            res.status(200).json(`Se ha eliminado correctamente la categoria: ${id}`)
+            return res.status(200).json(`Se ha eliminado correctamente la categoria: ${id}`)
         });
 
     } catch (error) {
@@ -281,7 +283,7 @@ app.post('/categories', async (req, res) => {
 
         const query = 'INSERT INTO categorias (nombre) VALUES ($1)';
         const result = await pool.query(query, [nombre]);
-        res.status(201).json({
+        return res.status(201).json({
             message: 'Categoría insertada exitosamente',
             category: {
                 id: "",
